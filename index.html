@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qwikk - Bike Taxi & Auto Booking App</title>
+    <meta name="description" content="Book instant bike taxis, autos, and cabs with Qwikk. Fast, affordable, and safe rides.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css?v=2.3">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div id="app-container">
+        <!-- 1. WELCOME LANDING SCREEN -->
+        <div id="screen-welcome" class="screen active welcome-theme">
+            <div class="welcome-content">
+                <div class="welcome-brand">Qwikk</div>
+                <h1 class="welcome-slogan">Hop on.<br>Move <em>fast.</em></h1>
+                <p class="welcome-subtitle">Book a bike, auto, cab or parcel in seconds. Upfront fares, verified captains, every street in your city.</p>
+                <div class="welcome-actions">
+                    <button id="btn-welcome-get-started" class="btn-welcome-dark">Get started &rarr;</button>
+                    <button id="btn-welcome-book-ride" class="btn-welcome-light">Book a ride</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. LOGIN DETAILS SCREEN -->
+        <div id="screen-login" class="screen welcome-theme">
+            <button class="btn-back" id="btn-back-to-welcome">
+                <i data-lucide="arrow-left"></i>
+            </button>
+            <div class="auth-card">
+                <div class="auth-header">
+                    <div class="welcome-brand text-dark">Qwikk</div>
+                    <h2>Create Account</h2>
+                    <p>Enter your details to get started with Qwikk</p>
+                </div>
+                
+                <div class="auth-body">
+                    <div class="form-group-auth">
+                        <label for="login-name">Your Name</label>
+                        <input type="text" id="login-name" placeholder="Enter Full Name" autocomplete="name">
+                    </div>
+                    <div class="form-group-auth">
+                        <label for="login-phone">Mobile Number</label>
+                        <div class="phone-input-container">
+                            <span class="country-code">+91</span>
+                            <input type="tel" id="login-phone" placeholder="Enter Mobile Number" maxlength="10" autocomplete="tel">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="auth-footer">
+                    <button id="btn-login-next" class="btn-primary btn-block" disabled>Next</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. OTP VERIFICATION SCREEN -->
+        <div id="screen-otp" class="screen welcome-theme">
+            <button class="btn-back" id="btn-back-to-login">
+                <i data-lucide="arrow-left"></i>
+            </button>
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h2>Verify OTP</h2>
+                    <p>Sent to <strong id="otp-display-name">User</strong> (<span id="otp-display-phone">+91 9999999999</span>)</p>
+                </div>
+                
+                <div class="auth-body">
+                    <div class="otp-input-group">
+                        <input type="text" class="otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric">
+                        <input type="text" class="otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric">
+                        <input type="text" class="otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric">
+                        <input type="text" class="otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric">
+                    </div>
+                    <div class="otp-help-msg">Tip: Enter correct OTP <strong>1234</strong> to login.</div>
+                    <div id="otp-error-msg" class="error-msg-auth hidden">Invalid OTP. Please try again!</div>
+                </div>
+                
+                <div class="auth-footer">
+                    <button id="btn-verify-otp" class="btn-primary btn-block">Verify & Proceed</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. MAIN APPLICATION WORKSPACE -->
+        <div id="screen-app" class="screen">
+            <!-- Sidebar Navigation -->
+            <nav class="sidebar">
+                <div class="sidebar-header">
+                    <div class="user-profile-summary">
+                        <div class="profile-avatar">U</div>
+                        <div class="profile-details">
+                            <h4 id="sidebar-user-name">User Account</h4>
+                            <p id="sidebar-user-phone">+91 9999999999</p>
+                        </div>
+                    </div>
+                </div>
+                <ul class="sidebar-menu">
+                    <li class="menu-item active" data-target="dashboard">
+                        <i data-lucide="map-pin"></i> <span>Book a Ride</span>
+                    </li>
+                    <li class="menu-item" data-target="history">
+                        <i data-lucide="history"></i> <span>My Rides</span>
+                    </li>
+                    <li class="menu-item" data-target="wallet">
+                        <i data-lucide="wallet"></i> <span>Wallet</span>
+                    </li>
+                    <li class="menu-item" data-target="profile">
+                        <i data-lucide="user"></i> <span>Profile</span>
+                    </li>
+                </ul>
+                <div class="sidebar-footer">
+                    <button id="btn-logout" class="btn-logout-custom">
+                        <i data-lucide="log-out"></i> <span>Log Out</span>
+                    </button>
+                </div>
+            </nav>
+
+            <!-- Main App Content Area -->
+            <main class="app-main-content">
+                <!-- Mobile Navigation Bar -->
+                <header class="mobile-header">
+                    <button id="mobile-menu-toggle"><i data-lucide="menu"></i></button>
+                    <div class="mobile-logo-text">Qwikk</div>
+                    <button id="mobile-wallet-btn" class="wallet-badge"><i data-lucide="wallet"></i> <span class="wallet-val">₹120</span></button>
+                </header>
+
+                <!-- Dynamic Dashboard Workspace Grid -->
+                <div class="workspace-grid">
+                    <!-- Booking / Navigation Sidebar Panel -->
+                    <section class="left-panel">
+                        <!-- Panel A: Booking Control -->
+                        <div id="panel-booking" class="booking-panel active-panel">
+                            <h2>Where are you going?</h2>
+                            
+                            <div class="location-inputs">
+                                <div class="location-input-row">
+                                    <div class="location-icon pickup-dot"></div>
+                                    <input type="text" id="input-pickup" placeholder="Enter Current Location" value="Telco Colony">
+                                    <button class="clear-input" id="clear-pickup"><i data-lucide="x"></i></button>
+                                </div>
+                                <div class="location-input-row">
+                                    <div class="location-icon drop-dot"></div>
+                                    <input type="text" id="input-dropoff" placeholder="Enter Destination">
+                                    <button class="clear-input" id="clear-dropoff"><i data-lucide="x"></i></button>
+                                </div>
+                                <div class="route-connector-line"></div>
+                            </div>
+
+                            <!-- Autocomplete suggestion list -->
+                            <div id="autocomplete-suggestions" class="suggestions-box hidden"></div>
+
+                            <div class="saved-places-shortcut">
+                                <button class="btn-shortcut" id="btn-home-shortcut">
+                                    <i data-lucide="home"></i> Home
+                                </button>
+                                <button class="btn-shortcut" id="btn-work-shortcut">
+                                    <i data-lucide="briefcase"></i> Work
+                                </button>
+                            </div>
+
+                            <!-- Vehicle Category Picker (Show after entering destination) -->
+                            <div id="vehicle-picker" class="hidden">
+                                <h3>Available Rides</h3>
+                                <div class="ride-options">
+                                    <div class="ride-option-card selected" data-vehicle="bike">
+                                        <div class="vehicle-image-placeholder bike-img"></div>
+                                        <div class="ride-desc">
+                                            <span class="ride-title">Qwikk Bike</span>
+                                            <span class="ride-sub">Fastest, avoid traffic</span>
+                                        </div>
+                                        <div class="ride-pricing">
+                                            <span class="ride-price" id="price-bike">₹49</span>
+                                            <span class="ride-eta" id="eta-bike">3 mins</span>
+                                        </div>
+                                    </div>
+                                    <div class="ride-option-card" data-vehicle="scooty">
+                                        <div class="vehicle-image-placeholder scooty-img"></div>
+                                        <div class="ride-desc">
+                                            <span class="ride-title">Scooty</span>
+                                            <span class="ride-sub">Convenient solo rides</span>
+                                        </div>
+                                        <div class="ride-pricing">
+                                            <span class="ride-price" id="price-scooty">₹55</span>
+                                            <span class="ride-eta" id="eta-scooty">3 mins</span>
+                                        </div>
+                                    </div>
+                                    <div class="ride-option-card" data-vehicle="auto">
+                                        <div class="vehicle-image-placeholder auto-img"></div>
+                                        <div class="ride-desc">
+                                            <span class="ride-title">Auto</span>
+                                            <span class="ride-sub">Pocket-friendly open-air</span>
+                                        </div>
+                                        <div class="ride-pricing">
+                                            <span class="ride-price" id="price-auto">₹79</span>
+                                            <span class="ride-eta" id="eta-auto">5 mins</span>
+                                        </div>
+                                    </div>
+                                    <div class="ride-option-card" data-vehicle="bike-pink">
+                                        <div class="vehicle-image-placeholder bike-pink-img"></div>
+                                        <div class="ride-desc">
+                                            <span class="ride-title">Pink Bike</span>
+                                            <span class="ride-sub">Safe solo rides for women</span>
+                                        </div>
+                                        <div class="ride-pricing">
+                                            <span class="ride-price" id="price-bike-pink">₹49</span>
+                                            <span class="ride-eta" id="eta-bike-pink">4 mins</span>
+                                        </div>
+                                    </div>
+                                    <div class="ride-option-card" data-vehicle="cab-economy">
+                                        <div class="vehicle-image-placeholder cab-economy-img"></div>
+                                        <div class="ride-desc">
+                                            <span class="ride-title">Cab Economy</span>
+                                            <span class="ride-sub">Affordable daily commutes</span>
+                                        </div>
+                                        <div class="ride-pricing">
+                                            <span class="ride-price" id="price-cab-economy">₹139</span>
+                                            <span class="ride-eta" id="eta-cab-economy">6 mins</span>
+                                        </div>
+                                    </div>
+                                    <div class="ride-option-card" data-vehicle="cab-priority">
+                                        <div class="vehicle-image-placeholder cab-priority-img"></div>
+                                        <div class="ride-desc">
+                                            <span class="ride-title">Cab Priority</span>
+                                            <span class="ride-sub">Faster pickups & matching</span>
+                                        </div>
+                                        <div class="ride-pricing">
+                                            <span class="ride-price" id="price-cab-priority">₹169</span>
+                                            <span class="ride-eta" id="eta-cab-priority">3 mins</span>
+                                        </div>
+                                    </div>
+                                    <div class="ride-option-card" data-vehicle="cab-premium">
+                                        <div class="vehicle-image-placeholder cab-premium-img"></div>
+                                        <div class="ride-desc">
+                                            <span class="ride-title">Cab Premium</span>
+                                            <span class="ride-sub">Luxury sedans, top-rated partners</span>
+                                        </div>
+                                        <div class="ride-pricing">
+                                            <span class="ride-price" id="price-cab-premium">₹199</span>
+                                            <span class="ride-eta" id="eta-cab-premium">5 mins</span>
+                                        </div>
+                                    </div>
+                                    <div class="ride-option-card" data-vehicle="cab-xl">
+                                        <div class="vehicle-image-placeholder cab-xl-img"></div>
+                                        <div class="ride-desc">
+                                            <span class="ride-title">Cab XL</span>
+                                            <span class="ride-sub">Spacious SUVs for groups</span>
+                                        </div>
+                                        <div class="ride-pricing">
+                                            <span class="ride-price" id="price-cab-xl">₹249</span>
+                                            <span class="ride-eta" id="eta-cab-xl">7 mins</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="payment-method-selector">
+                                    <div class="payment-row" id="payment-toggle-btn">
+                                        <i data-lucide="credit-card"></i>
+                                        <span id="selected-payment-method">Rapido Pay (₹120)</span>
+                                        <i data-lucide="chevron-right" class="arrow-right"></i>
+                                    </div>
+                                    <div class="promo-code-btn">
+                                        <i data-lucide="ticket"></i>
+                                        <span>Apply Coupon</span>
+                                    </div>
+                                </div>
+
+                                <button id="btn-request-ride" class="btn-primary btn-block">Confirm Booking</button>
+                            </div>
+                        </div>
+
+                        <!-- Panel B: Matching Captain -->
+                        <div id="panel-matching" class="booking-panel">
+                            <div class="matching-container">
+                                <div class="radar-ping">
+                                    <div class="ping-circle circle-1"></div>
+                                    <div class="ping-circle circle-2"></div>
+                                    <div class="ping-icon"><i data-lucide="bike"></i></div>
+                                </div>
+                                <h2>Finding your Rapido Captain...</h2>
+                                <p>Contacting nearby drivers to accept your ride</p>
+                                
+                                <div class="ride-summary-mini">
+                                    <div class="summary-loc"><i data-lucide="circle-dot"></i> <span id="matching-pickup">Pickup</span></div>
+                                    <div class="summary-loc"><i data-lucide="map-pin"></i> <span id="matching-drop">Dropoff</span></div>
+                                </div>
+                                <button id="btn-cancel-matching" class="btn-secondary btn-block">Cancel Request</button>
+                            </div>
+                        </div>
+
+                        <!-- Panel C: Driver Assigned & Live Tracking -->
+                        <div id="panel-tracking" class="booking-panel">
+                            <div class="assigned-header">
+                                <div class="status-badge green">Captain Arriving</div>
+                                <h2>OTP to Share: <span id="ride-otp">1409</span></h2>
+                            </div>
+
+                            <div class="captain-card">
+                                <div class="captain-avatar" id="captain-avatar-img">🧑</div>
+                                <div class="captain-info">
+                                    <h4 id="captain-name">Ramesh Kumar</h4>
+                                    <p class="captain-rating"><i data-lucide="star" class="star-icon"></i> 4.9 (420 rides)</p>
+                                </div>
+                                <div class="vehicle-info">
+                                    <span class="vehicle-plate" id="vehicle-plate-num">KA 03 EX 4598</span>
+                                    <span class="vehicle-model" id="vehicle-model-desc">Yellow Honda Activa</span>
+                                </div>
+                            </div>
+
+                            <div class="ride-progress-stats">
+                                <div class="stat-box">
+                                    <span class="stat-label">ETA</span>
+                                    <span class="stat-value" id="live-eta">3 mins</span>
+                                </div>
+                                <div class="stat-box">
+                                    <span class="stat-label">Distance</span>
+                                    <span class="stat-value" id="live-distance">1.2 km</span>
+                                </div>
+                                <div class="stat-box">
+                                    <span class="stat-label">Fare</span>
+                                    <span class="stat-value" id="live-fare">₹49</span>
+                                </div>
+                            </div>
+
+                            <div class="captain-actions">
+                                <button class="btn-action-circle" title="Call Captain"><i data-lucide="phone"></i></button>
+                                <button class="btn-action-circle" title="Chat with Captain"><i data-lucide="message-square"></i></button>
+                                <button class="btn-action-circle danger" id="btn-cancel-ride" title="Cancel Ride"><i data-lucide="x-circle"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Panel D: Ride Completed / Rating -->
+                        <div id="panel-completed" class="booking-panel">
+                            <div class="completed-container">
+                                <div class="success-icon-wrap">
+                                    <i data-lucide="check-circle-2"></i>
+                                </div>
+                                <h2>Hope you enjoyed your Ride!</h2>
+                                <p>Your ride with <span id="comp-captain-name">Ramesh</span> is complete</p>
+
+                                <div class="receipt-box">
+                                    <div class="receipt-row">
+                                        <span>Ride Fare</span>
+                                        <span id="receipt-fare">₹49</span>
+                                    </div>
+                                    <div class="receipt-row">
+                                        <span>Taxes & Fees</span>
+                                        <span>₹5</span>
+                                    </div>
+                                    <div class="receipt-row total">
+                                        <span>Total Paid</span>
+                                        <span id="receipt-total">₹54</span>
+                                    </div>
+                                    <div class="receipt-payment-method">Paid via Rapido Pay</div>
+                                </div>
+
+                                <div class="rating-section">
+                                    <h3>Rate your Captain</h3>
+                                    <div class="star-rating">
+                                        <i data-lucide="star" data-index="1"></i>
+                                        <i data-lucide="star" data-index="2"></i>
+                                        <i data-lucide="star" data-index="3"></i>
+                                        <i data-lucide="star" data-index="4"></i>
+                                        <i data-lucide="star" data-index="5"></i>
+                                    </div>
+                                    <textarea id="rating-comment" placeholder="Leave a review (optional)..."></textarea>
+                                </div>
+
+                                <button id="btn-done-rating" class="btn-primary btn-block">Back to Dashboard</button>
+                            </div>
+                        </div>
+
+                        <!-- Panel E: Ride History -->
+                        <div id="panel-history" class="booking-panel">
+                            <div class="panel-header-row">
+                                <h2>Ride History</h2>
+                                <button class="btn-close-subpanel"><i data-lucide="x"></i></button>
+                            </div>
+                            <div class="history-list" id="history-items-container">
+                                <!-- Dynamic History Items go here -->
+                            </div>
+                        </div>
+
+                        <!-- Panel F: Wallet Panel -->
+                        <div id="panel-wallet" class="booking-panel">
+                            <div class="panel-header-row">
+                                <h2>Rapido Wallet</h2>
+                                <button class="btn-close-subpanel"><i data-lucide="x"></i></button>
+                            </div>
+                            <div class="wallet-card-bg">
+                                <span class="wallet-card-title">Available Balance</span>
+                                <span class="wallet-card-balance" id="wallet-balance-display">₹120</span>
+                            </div>
+                            
+                            <div class="add-money-section">
+                                <h3>Add Money</h3>
+                                <div class="quick-amounts">
+                                    <button class="btn-amount" data-amount="50">+ ₹50</button>
+                                    <button class="btn-amount" data-amount="100">+ ₹100</button>
+                                    <button class="btn-amount" data-amount="200">+ ₹200</button>
+                                </div>
+                                <div class="custom-amount-input">
+                                    <span class="currency-symbol">₹</span>
+                                    <input type="number" id="add-wallet-input" placeholder="Enter custom amount" min="10">
+                                </div>
+                                <button id="btn-wallet-add-fund" class="btn-primary btn-block">Add Money to Wallet</button>
+                            </div>
+
+                            <div class="transactions-section">
+                                <h3>Recent Transactions</h3>
+                                <div class="transaction-list" id="transaction-list-container">
+                                    <!-- Transaction logs -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Panel G: Profile Panel -->
+                        <div id="panel-profile" class="booking-panel">
+                            <div class="panel-header-row">
+                                <h2>My Profile</h2>
+                                <button class="btn-close-subpanel"><i data-lucide="x"></i></button>
+                            </div>
+                            <div class="profile-form">
+                                <div class="form-group">
+                                    <label for="profile-name">Full Name</label>
+                                    <input type="text" id="profile-name" value="User Account">
+                                </div>
+                                <div class="form-group">
+                                    <label for="profile-email">Email Address</label>
+                                    <input type="email" id="profile-email" value="user@example.com">
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone Number</label>
+                                    <input type="text" id="profile-phone" value="+91 9999999999" disabled>
+                                </div>
+
+                                <div class="saved-addresses-config">
+                                    <h3>Saved Places</h3>
+                                    <div class="saved-address-row">
+                                        <div class="icon-wrap"><i data-lucide="home"></i></div>
+                                        <div class="address-details">
+                                            <strong>Home</strong>
+                                            <input type="text" id="profile-home-addr" value="Koramangala 4th Block, Bengaluru">
+                                        </div>
+                                    </div>
+                                    <div class="saved-address-row">
+                                        <div class="icon-wrap"><i data-lucide="briefcase"></i></div>
+                                        <div class="address-details">
+                                            <strong>Work</strong>
+                                            <input type="text" id="profile-work-addr" value="Manyata Tech Park, Bengaluru">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button id="btn-save-profile" class="btn-primary btn-block">Save Changes</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Large Interactive Map Panel -->
+                    <section class="right-panel-map">
+                        <div id="leaflet-map-container"></div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+
+
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <!-- App Scripts -->
+    <script src="simulation.js?v=2.3"></script>
+    <script src="app.js?v=2.3"></script>
+</body>
+</html>
